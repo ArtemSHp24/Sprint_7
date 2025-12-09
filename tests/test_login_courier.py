@@ -1,40 +1,34 @@
-from helpers.generator import random_string
 import allure
+from helpers.generator import generate_courier, random_string
 
 
 @allure.suite("Логин курьера")
 class TestLoginCourier:
 
     @allure.step("Успешный логин курьера")
-    def test_login_success(self, courier_api, courier_data):
-        courier_api.create(courier_data)
+    def test_login_success(self, courier_api, courier_with_cleanup):
+        data = courier_with_cleanup
 
         response = courier_api.login({
-            "login": courier_data["login"],
-            "password": courier_data["password"]
+            "login": data["login"],
+            "password": data["password"]
         })
 
         assert response.status_code == 200
-        courier_id = response.json().get("id")
+        assert "id" in response.json()
 
-        courier_api.delete(courier_id)
 
     @allure.step("Логин курьера с неправильным паролем")
-    def test_login_wrong_password(self, courier_api, courier_data):
-        courier_api.create(courier_data)
+    def test_login_wrong_password(self, courier_api, courier_with_cleanup):
+        data = courier_with_cleanup
 
         response = courier_api.login({
-            "login": courier_data["login"],
+            "login": data["login"],
             "password": "wrong"
         })
 
         assert response.status_code == 404
 
-        login_resp = courier_api.login({
-            "login": courier_data["login"],
-            "password": courier_data["password"]
-        })
-        courier_api.delete(login_resp.json().get("id"))
 
     @allure.step("Логин без обязательного поля")
     def test_login_without_required_field(self, courier_api):

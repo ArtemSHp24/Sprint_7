@@ -15,5 +15,19 @@ def order_api():
 
 
 @pytest.fixture
-def courier_data():
-    return generate_courier()
+def courier_with_cleanup(courier_api):
+   
+    data = generate_courier()
+    courier_api.create(data)
+
+    yield data
+
+    login_resp = courier_api.login({
+        "login": data["login"],
+        "password": data["password"]
+    })
+
+    courier_id = login_resp.json().get("id")
+
+    if courier_id:
+        courier_api.delete(courier_id)
